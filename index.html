@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ты меня любишь? 💗</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', 'Comic Sans MS', system-ui, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background: linear-gradient(135deg, #ffeef8 0%, #ffd9ec 50%, #ffc2e0 100%);
+  }
+  
+  /* ============ ГЛАВНЫЙ ЭКРАН ============ */
+  #mainScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 30px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  #mainScreen.hidden { display: none; }
+  
+  .question {
+    font-size: clamp(28px, 6vw, 56px);
+    color: #c2185b;
+    margin-bottom: 50px;
+    font-weight: 800;
+    text-shadow: 2px 2px 0 #fff, 4px 4px 10px rgba(194,24,91,0.3);
+    animation: pulse 2s ease-in-out infinite;
+    z-index: 2;
+    position: relative;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  
+  .buttons {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    justify-content: center;
+    z-index: 2;
+    position: relative;
+  }
+  
+  .btn {
+    font-size: clamp(20px, 4vw, 32px);
+    font-weight: 800;
+    padding: 20px 50px;
+    border: none;
+    border-radius: 60px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  }
+  
+  .btn-yes {
+    background: linear-gradient(135deg, #ff6b9d, #ff3d7f);
+    color: white;
+    animation: bounce 1.5s ease-in-out infinite;
+  }
+  
+  .btn-yes:hover {
+    transform: scale(1.1) rotate(-2deg);
+    box-shadow: 0 15px 40px rgba(255,61,127,0.5);
+  }
+  
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  
+  .btn-no {
+    background: linear-gradient(135deg, #a0aec0, #718096);
+    color: white;
+  }
+  
+  .btn-no:hover { transform: scale(0.95); }
+  
+  .floating-heart {
+    position: absolute;
+    font-size: 30px;
+    opacity: 0.4;
+    animation: floatUp linear infinite;
+    pointer-events: none;
+  }
+  
+  @keyframes floatUp {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.5; }
+    90% { opacity: 0.5; }
+    100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+  }
+  
+  /* ============ ПЛАШКА ERROR ============ */
+  #errorOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+    animation: shake 0.5s ease;
+  }
+  
+  #errorOverlay.show { display: flex; }
+  
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-20px); }
+    40% { transform: translateX(20px); }
+    60% { transform: translateX(-15px); }
+    80% { transform: translateX(15px); }
+  }
+  
+  .error-box {
+    background: #dc2626;
+    color: white;
+    padding: 60px 50px;
+    border-radius: 20px;
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+    border: 6px solid #991b1b;
+    box-shadow: 0 0 60px rgba(220,38,38,0.8), 0 20px 60px rgba(0,0,0,0.5);
+    animation: errorPulse 0.8s ease infinite;
+  }
+  
+  @keyframes errorPulse {
+    0%, 100% { box-shadow: 0 0 60px rgba(220,38,38,0.8), 0 20px 60px rgba(0,0,0,0.5); }
+    50% { box-shadow: 0 0 100px rgba(220,38,38,1), 0 20px 60px rgba(0,0,0,0.5); }
+  }
+  
+  .error-box .icon { font-size: 80px; display: block; margin-bottom: 20px; }
+  .error-box h2 {
+    font-size: clamp(28px, 6vw, 44px);
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .error-box p {
+    font-size: clamp(15px, 3vw, 19px);
+    line-height: 1.5;
+    margin-bottom: 30px;
+    opacity: 0.95;
+  }
+  .error-box button {
+    background: white;
+    color: #dc2626;
+    border: none;
+    padding: 14px 40px;
+    font-size: 18px;
+    font-weight: 800;
+    border-radius: 40px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: transform 0.2s;
+  }
+  .error-box button:hover { transform: scale(1.05); }
+  
+  /* ============ ЭКРАН «ДА» ============ */
+  #loveScreen {
+    display: none;
+    min-height: 100vh;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #ffc2e0 0%, #ff9ec7 50%, #ffb3d9 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  #loveScreen.show { display: block; }
+  
+  .love-card {
+    max-width: 700px;
+    margin: 40px auto;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 30px;
+    padding: 50px 40px;
+    box-shadow: 0 20px 60px rgba(194,24,91,0.3), inset 0 0 0 3px rgba(255,255,255,0.5);
+    position: relative;
+    z-index: 2;
+    backdrop-filter: blur(10px);
+    border: 4px solid #ffb3d9;
+    animation: cardIn 0.8s ease;
+  }
+  
+  @keyframes cardIn {
+    0% { opacity: 0; transform: translateY(50px) scale(0.9); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  
+  .love-card h1 {
+    font-size: clamp(24px, 5vw, 38px);
+    color: #c2185b;
+    text-align: center;
+    margin-bottom: 25px;
+    line-height: 1.3;
+    text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+  }
+  
+  .emoji-row {
+    text-align: center;
+    font-size: 40px;
+    margin-bottom: 25px;
+    letter-spacing: 8px;
+    animation: bounceRow 2s ease-in-out infinite;
+  }
+  
+  @keyframes bounceRow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  
+  .message {
+    font-size: clamp(16px, 3vw, 19px);
+    line-height: 1.85;
+    color: #6b1533;
+    text-align: left;
+    white-space: pre-line;
+  }
+  
+  .highlight { color: #c2185b; font-weight: 700; }
+  
+  .signature {
+    text-align: right;
+    margin-top: 30px;
+    font-size: clamp(16px, 3vw, 20px);
+    color: #c2185b;
+    font-weight: 700;
+    font-style: italic;
+  }
+  
+  /* ============ ДЕКОРАЦИИ ============ */
+  .deco {
+    position: absolute;
+    font-size: 60px;
+    z-index: 1;
+    animation: wobble 3s ease-in-out infinite;
+    user-select: none;
+    pointer-events: none;
+  }
+  
+  @keyframes wobble {
+    0%, 100% { transform: rotate(-8deg) scale(1); }
+    50% { transform: rotate(8deg) scale(1.1); }
+  }
+  
+  .deco.tl { top: 20px; left: 20px; }
+  .deco.tr { top: 20px; right: 20px; animation-delay: 0.5s; }
+  .deco.bl { bottom: 20px; left: 20px; animation-delay: 1s; }
+  .deco.br { bottom: 20px; right: 20px; animation-delay: 1.5s; }
+  
+  .back-btn {
+    display: block;
+    margin: 40px auto 20px;
+    background: white;
+    color: #c2185b;
+    border: 3px solid #ff6b9d;
+    padding: 14px 40px;
+    font-size: 17px;
+    font-weight: 800;
+    border-radius: 40px;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 8px 20px rgba(194,24,91,0.2);
+    transition: all 0.2s;
+  }
+  
+  .back-btn:hover {
+    background: #c2185b;
+    color: white;
+    transform: translateY(-3px);
+  }
+  
+  .falling-heart {
+    position: absolute;
+    font-size: 24px;
+    top: -50px;
+    animation: fallDown linear infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  @keyframes fallDown {
+    0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(105vh) rotate(360deg); opacity: 0.3; }
+  }
+  
+  /* ============ МУЗЫКА КНОПКА ============ */
+  .music-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff6b9d, #c2185b);
+    color: white;
+    border: 3px solid white;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 25px rgba(194,24,91,0.5);
+    transition: transform 0.2s;
+    font-family: inherit;
+  }
+  
+  .music-toggle:hover { transform: scale(1.1); }
+  .music-toggle.playing { animation: musicPulse 2s ease-in-out infinite; }
+  
+  @keyframes musicPulse {
+    0%, 100% { box-shadow: 0 8px 25px rgba(194,24,91,0.5); }
+    50% { box-shadow: 0 8px 40px rgba(194,24,91,0.95); }
+  }
+  
+  /* Подсказка «включи звук» — показывается если автозапуск не удался */
+  .music-hint {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    background: rgba(255,255,255,0.95);
+    color: #c2185b;
+    padding: 10px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 5px 20px rgba(194,24,91,0.3);
+    z-index: 100;
+    animation: hintPulse 2s ease-in-out infinite;
+    pointer-events: none;
+    display: none;
+  }
+  
+  .music-hint.show { display: block; }
+  
+  @keyframes hintPulse {
+    0%, 100% { transform: translateY(0); opacity: 1; }
+    50% { transform: translateY(-5px); opacity: 0.85; }
+  }
+  
+  .music-hint.hide { display: none !important; }
+  
+  @media (max-width: 600px) {
+    .btn { padding: 16px 36px; }
+    .love-card { padding: 35px 25px; border-radius: 22px; }
+    .deco { font-size: 40px; }
+    .error-box { padding: 40px 25px; }
+    .music-toggle { width: 50px; height: 50px; font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ ГЛАВНЫЙ ЭКРАН ============ -->
+<div id="mainScreen">
+  <h1 class="question">Ты меня любишь? 💕</h1>
+  <div class="buttons">
+    <button class="btn btn-yes" onclick="showLove()">Да !!!! ❤️</button>
+    <button class="btn btn-no" onclick="showError()">Нет 🙈</button>
+  </div>
+</div>
+
+<!-- ============ ЭКРАН «ДА» ============ -->
+<div id="loveScreen">
+  <span class="deco tl">🐱</span>
+  <span class="deco tr">💖</span>
+  <span class="deco bl">💕</span>
+  <span class="deco br">🐈</span>
+  
+  <div class="love-card">
+    <div class="emoji-row">💗 🐱 💗 🐈 💗</div>
+    <h1>Принцесса моя 💖</h1>
+    <div class="message">
+      Я тебя тоже очень сильно люблю. Я хочу каждый раз влюбляться в тебя как в первый. Я не сильно много умею говорить тёплые слова, но знаю, насколько важна тебе моя поддержка.
+      
+      Я хочу сказать, что ты <span class="highlight">самый лучший человек в моей жизни</span>. Смотря какие-то рилсы, я представляю, как ты лежишь рядом, и мы вместе смеёмся с них и обнимаемся, ни о чём не думая, кроме того, что мы влюблены друг в друга.
+      
+      Знай, что я <span class="highlight">тобой безумно горжусь</span> и всегда жду не дождусь твоего сообщения ❤️
+    </div>
+    <div class="signature">— Твой навсегда 💗</div>
+  </div>
+  
+  <button class="back-btn" onclick="goBack()">← Назад</button>
+</div>
+
+<!-- ============ ПЛАШКА ERROR ============ -->
+<div id="errorOverlay" onclick="closeError(event)">
+  <div class="error-box" onclick="event.stopPropagation()">
+    <span class="icon">⚠️</span>
+    <h2>ERROR</h2>
+    <p>
+      Критическая ошибка системы!<br>
+      Такого ответа не существует в этой вселенной 🚫<br>
+      Попробуй ещё раз и нажми правильную кнопку 💗
+    </p>
+    <button onclick="closeError()">Хорошо, попробую ещё 💕</button>
+  </div>
+</div>
+
+<!-- ============ МУЗЫКА ============ -->
+<button class="music-toggle" id="musicBtn" onclick="toggleMusic()" title="Включить/выключить музыку">🎵</button>
+<div class="music-hint" id="musicHint">🎶 нажми в любом месте — музыка включится</div>
+
+<script>
+  /* ================================================================
+     МЯГКАЯ РОМАНТИЧЕСКАЯ МЕЛОДИЯ (Web Audio API)
+     ================================================================ */
+  
+  let audioCtx = null;
+  let musicPlaying = false;
+  let musicTimer = null;
+  let masterGain = null;
+  let delayNode = null;
+  
+  const NOTES = {
+    'C3': 130.81, 'D3': 146.83, 'E3': 164.81, 'F3': 174.61, 'G3': 196.00, 'A3': 220.00, 'B3': 246.94,
+    'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23, 'G4': 392.00, 'A4': 440.00, 'B4': 493.88,
+    'C5': 523.25, 'D5': 587.33, 'E5': 659.25, 'F5': 698.46, 'G5': 783.99, 'A5': 880.00
+  };
+  
+  const progression = [
+    { bass: 'A3', chord: ['A4', 'C5', 'E5'] },
+    { bass: 'F3', chord: ['F4', 'A4', 'C5'] },
+    { bass: 'C3', chord: ['C4', 'E4', 'G4'] },
+    { bass: 'G3', chord: ['G4', 'B4', 'D5'] }
+  ];
+  
+  const melodyPattern = [
+    { note: 'E5', time: 0.0, dur: 0.9 },
+    { note: 'C5', time: 1.0, dur: 0.9 },
+    { note: 'F5', time: 2.0, dur: 1.2 },
+    { note: 'A4', time: 3.2, dur: 0.7 },
+    { note: 'G4', time: 4.0, dur: 0.9 },
+    { note: 'E4', time: 5.0, dur: 0.9 },
+    { note: 'D5', time: 6.0, dur: 1.6 },
+    { note: 'C5', time: 8.0, dur: 0.9 },
+    { note: 'A4', time: 9.0, dur: 0.9 },
+    { note: 'C5', time: 10.0, dur: 1.2 },
+    { note: 'F4', time: 11.2, dur: 0.7 },
+    { note: 'E4', time: 12.0, dur: 0.9 },
+    { note: 'G4', time: 13.0, dur: 0.9 },
+    { note: 'B4', time: 14.0, dur: 1.6 }
+  ];
+  
+  const CYCLE_DURATION = 16;
+  
+  function initAudio() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.0;
+    
+    delayNode = audioCtx.createDelay();
+    delayNode.delayTime.value = 0.35;
+    const delayFeedback = audioCtx.createGain();
+    delayFeedback.gain.value = 0.28;
+    const delayWet = audioCtx.createGain();
+    delayWet.gain.value = 0.35;
+    
+    delayNode.connect(delayFeedback);
+    delayFeedback.connect(delayNode);
+    delayNode.connect(delayWet);
+    delayWet.connect(masterGain);
+    
+    masterGain.connect(audioCtx.destination);
+  }
+  
+  function playSoftNote(freq, startTime, duration, volume = 0.15) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    
+    const lfo = audioCtx.createOscillator();
+    const lfoGain = audioCtx.createGain();
+    lfo.frequency.value = 4.5;
+    lfoGain.gain.value = 1.5;
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc.frequency);
+    
+    const attack = 0.15;
+    const release = duration;
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(volume, startTime + attack);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + attack + release);
+    
+    osc.connect(gain);
+    gain.connect(masterGain);
+    gain.connect(delayNode);
+    
+    osc.start(startTime);
+    lfo.start(startTime);
+    osc.stop(startTime + attack + release + 0.2);
+    lfo.stop(startTime + attack + release + 0.2);
+  }
+  
+  function playBass(freq, startTime, duration, volume = 0.1) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'triangle';
+    osc.frequency.value = freq;
+    
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(volume, startTime + 0.3);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+    
+    osc.connect(gain);
+    gain.connect(masterGain);
+    
+    osc.start(startTime);
+    osc.stop(startTime + duration + 0.1);
+  }
+  
+  function playPad(freqs, startTime, duration, volume = 0.04) {
+    freqs.forEach(freq => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(volume, startTime + 0.5);
+      gain.gain.linearRampToValueAtTime(volume * 0.7, startTime + duration - 0.3);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+      
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.1);
+    });
+  }
+  
+  function playCycle(startTime) {
+    progression.forEach((chord, i) => {
+      const chordStart = startTime + i * 2;
+      
+      playBass(NOTES[chord.bass], chordStart, 2.2, 0.09);
+      playPad(chord.chord.map(n => NOTES[n] / 2), chordStart, 2.3, 0.035);
+      
+      chord.chord.forEach((noteName, j) => {
+        playSoftNote(NOTES[noteName], chordStart + j * 0.6, 1.4, 0.09);
+      });
+    });
+    
+    melodyPattern.forEach(note => {
+      playSoftNote(NOTES[note.note], startTime + note.time, note.dur, 0.13);
+    });
+  }
+  
+  function scheduleMusic() {
+    if (!musicPlaying) return;
+    
+    const now = audioCtx.currentTime;
+    playCycle(now + 0.1);
+    
+    musicTimer = setTimeout(() => {
+      scheduleMusic();
+    }, CYCLE_DURATION * 1000);
+  }
+  
+  function startMusic() {
+    if (!audioCtx) initAudio();
+    
+    // Разблокировать аудио-контекст (важно для iOS/Safari)
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().then(() => {
+        actuallyStartMusic();
+      });
+    } else {
+      actuallyStartMusic();
+    }
+  }
+  
+  function actuallyStartMusic() {
+    if (musicPlaying) return;
+    musicPlaying = true;
+    
+    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
+    masterGain.gain.linearRampToValueAtTime(0.85, audioCtx.currentTime + 2);
+    
+    scheduleMusic();
+    
+    document.getElementById('musicBtn').textContent = '⏸';
+    document.getElementById('musicBtn').classList.add('playing');
+    document.getElementById('musicHint').classList.add('hide');
+  }
+  
+  function stopMusic() {
+    if (!audioCtx) return;
+    musicPlaying = false;
+    clearTimeout(musicTimer);
+    
+    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    masterGain.gain.setValueAtTime(masterGain.gain.value, audioCtx.currentTime);
+    masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.5);
+    
+    document.getElementById('musicBtn').textContent = '🎵';
+    document.getElementById('musicBtn').classList.remove('playing');
+  }
+  
+  function toggleMusic() {
+    if (musicPlaying) stopMusic();
+    else startMusic();
+  }
+  
+  /* ================================================================
+     АВТОЗАПУСК МУЗЫКИ
+     Пытаемся запустить сразу. Если браузер блокирует (политика autoplay) —
+     запускаем при первом ЛЮБОМ взаимодействии пользователя.
+     ================================================================ */
+  
+  function tryAutoplay() {
+    try {
+      initAudio();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().then(() => {
+          if (audioCtx.state === 'running') {
+            actuallyStartMusic();
+          } else {
+            // Не удалось — покажем подсказку
+            document.getElementById('musicHint').classList.add('show');
+          }
+        }).catch(() => {
+          document.getElementById('musicHint').classList.add('show');
+        });
+      } else if (audioCtx.state === 'running') {
+        actuallyStartMusic();
+      }
+    } catch (e) {
+      document.getElementById('musicHint').classList.add('show');
+    }
+  }
+  
+  // События, которые разблокируют музыку (первое из них)
+  const unlockEvents = ['click', 'touchstart', 'touchend', 'keydown', 'mousedown', 'pointerdown'];
+  let unlocked = false;
+  
+  function unlockMusic() {
+    if (unlocked) return;
+    unlocked = true;
+    if (!musicPlaying) {
+      startMusic();
+    }
+    // Снимаем слушатели
+    unlockEvents.forEach(ev => {
+      document.removeEventListener(ev, unlockMusic, true);
+    });
+    window.removeEventListener('scroll', unlockMusic, true);
+    document.removeEventListener('visibilitychange', unlockMusic);
+  }
+  
+  // Навешиваем на все возможные первые взаимодействия
+  unlockEvents.forEach(ev => {
+    document.addEventListener(ev, unlockMusic, { capture: true, passive: true });
+  });
+  window.addEventListener('scroll', unlockMusic, { capture: true, passive: true });
+  document.addEventListener('visibilitychange', unlockMusic);
+  
+  // Пытаемся запустить сразу (сработает, если браузер разрешает)
+  window.addEventListener('load', () => {
+    tryAutoplay();
+    
+    // На всякий случай пробуем ещё раз через 500мс — иногда браузеры
+    // уже «прогрелись» после загрузки
+    setTimeout(() => {
+      if (!musicPlaying) {
+        tryAutoplay();
+        // Если всё ещё не играет — покажем подсказку
+        if (!musicPlaying) {
+          document.getElementById('musicHint').classList.add('show');
+        }
+      }
+    }, 500);
+  });
+  
+  /* ================================================================
+     ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ЭКРАНОВ
+     ================================================================ */
+  
+  function createFloatingHearts() {
+    const main = document.getElementById('mainScreen');
+    const hearts = ['💖', '💕', '💗', '❤️', '💓', '💝', '🐱', '🐈'];
+    
+    for (let i = 0; i < 15; i++) {
+      const h = document.createElement('span');
+      h.className = 'floating-heart';
+      h.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+      h.style.left = Math.random() * 100 + '%';
+      h.style.fontSize = (20 + Math.random() * 30) + 'px';
+      h.style.animationDuration = (8 + Math.random() * 8) + 's';
+      h.style.animationDelay = (Math.random() * 8) + 's';
+      main.appendChild(h);
+    }
+  }
+  
+  function createFallingHearts() {
+    const love = document.getElementById('loveScreen');
+    love.querySelectorAll('.falling-heart').forEach(el => el.remove());
+    
+    const hearts = ['💖', '💕', '💗', '❤️', '💓', '💝', '🌸', '🐱', '🐈', '💞'];
+    for (let i = 0; i < 20; i++) {
+      const h = document.createElement('span');
+      h.className = 'falling-heart';
+      h.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+      h.style.left = Math.random() * 100 + '%';
+      h.style.fontSize = (18 + Math.random() * 24) + 'px';
+      h.style.animationDuration = (6 + Math.random() * 6) + 's';
+      h.style.animationDelay = (Math.random() * 6) + 's';
+      love.appendChild(h);
+    }
+  }
+  
+  function showLove() {
+    document.getElementById('mainScreen').classList.add('hidden');
+    const love = document.getElementById('loveScreen');
+    love.classList.add('show');
+    createFallingHearts();
+    window.scrollTo(0, 0);
+    
+    // На случай, если музыка ещё не запустилась
+    if (!musicPlaying) startMusic();
+  }
+  
+  function showError() {
+    const overlay = document.getElementById('errorOverlay');
+    overlay.classList.remove('show');
+    void overlay.offsetWidth;
+    overlay.classList.add('show');
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+  }
+  
+  function closeError(e) {
+    if (e && e.target !== document.getElementById('errorOverlay') && e.type === 'click' && e.target.tagName !== 'BUTTON') return;
+    document.getElementById('errorOverlay').classList.remove('show');
+  }
+  
+  function goBack() {
+    document.getElementById('loveScreen').classList.remove('show');
+    document.getElementById('mainScreen').classList.remove('hidden');
+    document.getElementById('loveScreen').querySelectorAll('.falling-heart').forEach(el => el.remove());
+    window.scrollTo(0, 0);
+  }
+  
+  createFloatingHearts();
+</script>
+
+</body>
+</html>
